@@ -1,5 +1,6 @@
 export interface Link {
   id: string;
+  title: string;
   user_id: string;
   original_url: string;
   slug: string;
@@ -7,6 +8,7 @@ export interface Link {
   expires_at: string | null;
   click_count: number;
   is_active: boolean;
+  is_protected: boolean;
   created_at: string;
   updated_at: string;
 }

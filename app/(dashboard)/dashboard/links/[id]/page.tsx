@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Link } from "@/lib/types";
 import LinkWrapper from "next/link";
+import { gmtToInputValue, localInputToGMT } from "@/lib/utils";
 
 export default function LinkDetailPage({
   params,
@@ -77,10 +78,9 @@ export default function LinkDetailPage({
         setSlug(data.link.slug);
         setHasPassword(!!data.link.password_hash);
         setHasExpiration(!!data.link.expires_at);
+        console.log(gmtToInputValue(data.link.expires_at));
         setExpiresAt(
-          data.link.expires_at
-            ? new Date(data.link.expires_at).toISOString().slice(0, 16)
-            : "",
+          data.link.expires_at ? gmtToInputValue(data.link.expires_at) : "",
         );
         setIsActive(data.link.is_active);
       } catch {
@@ -105,7 +105,7 @@ export default function LinkDetailPage({
           originalUrl,
           slug,
           password: hasPassword ? newPassword || undefined : "",
-          expiresAt: hasExpiration ? expiresAt : null,
+          expiresAt: hasExpiration ? localInputToGMT(expiresAt) : null,
           isActive,
         }),
       });

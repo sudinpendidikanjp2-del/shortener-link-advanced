@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,55 +9,61 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Spinner } from '@/components/ui/spinner'
-import type { Link } from '@/lib/types'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Spinner } from "@/components/ui/spinner";
+import type { Link } from "@/lib/types";
+import { gmtToInputValue } from "@/lib/utils";
 
 interface EditLinkDialogProps {
-  link: Link | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+  link: Link | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
 }
 
-export function EditLinkDialog({ link, open, onOpenChange, onSuccess }: EditLinkDialogProps) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  
-  const [title, setTitle] = useState('')
-  const [originalUrl, setOriginalUrl] = useState('')
-  const [slug, setSlug] = useState('')
-  const [expiresAt, setExpiresAt] = useState('')
-  const [isProtected, setIsProtected] = useState(false)
-  const [password, setPassword] = useState('')
-  const [isActive, setIsActive] = useState(true)
+export function EditLinkDialog({
+  link,
+  open,
+  onOpenChange,
+  onSuccess,
+}: EditLinkDialogProps) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [title, setTitle] = useState("");
+  const [originalUrl, setOriginalUrl] = useState("");
+  const [slug, setSlug] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [isProtected, setIsProtected] = useState(false);
+  const [password, setPassword] = useState("");
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (link) {
-      setTitle(link.title || '')
-      setOriginalUrl(link.original_url)
-      setSlug(link.slug)
-      setExpiresAt(link.expires_at ? new Date(link.expires_at).toISOString().slice(0, 16) : '')
-      setIsProtected(link.is_protected)
-      setIsActive(link.is_active)
-      setPassword('')
+      setTitle(link.title || "");
+      setOriginalUrl(link.original_url);
+      setSlug(link.slug);
+      setExpiresAt(link.expires_at ? gmtToInputValue(link.expires_at) : "");
+      setIsProtected(link.is_protected);
+      setIsActive(link.is_active);
+      setPassword("");
     }
-  }, [link])
+  }, [link]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!link) return
+    e.preventDefault();
+    if (!link) return;
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     try {
       const res = await fetch(`/api/links/${link.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: title || null,
           original_url: originalUrl,
@@ -67,22 +73,22 @@ export function EditLinkDialog({ link, open, onOpenChange, onSuccess }: EditLink
           password: isProtected && password ? password : undefined,
           is_active: isActive,
         }),
-      })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to update link')
+        throw new Error(data.error || "Failed to update link");
       }
 
-      onSuccess()
-      onOpenChange(false)
+      onSuccess();
+      onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update link')
+      setError(err instanceof Error ? err.message : "Failed to update link");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -167,7 +173,8 @@ export function EditLinkDialog({ link, open, onOpenChange, onSuccess }: EditLink
             {isProtected && (
               <div className="grid gap-2">
                 <Label htmlFor="edit-password">
-                  New Password {link?.is_protected && '(leave empty to keep current)'}
+                  New Password{" "}
+                  {link?.is_protected && "(leave empty to keep current)"}
                 </Label>
                 <Input
                   id="edit-password"
@@ -180,7 +187,11 @@ export function EditLinkDialog({ link, open, onOpenChange, onSuccess }: EditLink
             )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
@@ -191,5 +202,5 @@ export function EditLinkDialog({ link, open, onOpenChange, onSuccess }: EditLink
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
