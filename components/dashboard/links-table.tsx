@@ -125,7 +125,7 @@ export function LinksTable({
       const height = svg.clientHeight || 200;
 
       // optional: biar HD
-      const scale = 2;
+      const scale = 4;
       canvas.width = width * scale;
       canvas.height = height * scale;
 
@@ -245,7 +245,7 @@ export function LinksTable({
                 className="bg-white p-6 rounded-2xl inline-block mb-8"
               >
                 <QRCodeSVG
-                  value={`${window.location.origin}/r/${qrLink.slug}`}
+                  value={`${window.location.origin}/${qrLink.slug}`}
                   size={200}
                   level="H"
                   includeMargin={false}
