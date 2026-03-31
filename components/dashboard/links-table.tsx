@@ -70,93 +70,79 @@ export function LinksTable({
 
     const clonedSvg = svg.cloneNode(true) as SVGElement;
 
-    // ✅ wajib namespace
+    // namespace wajib
     clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    clonedSvg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
 
-    // ✅ inline <image>
+    // inline image (logo)
     const image = clonedSvg.querySelector("image");
     if (image) {
-      let href =
-        image.getAttribute("href") ||
-        image.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+      const href = image.getAttribute("href");
 
       if (href && !href.startsWith("data:")) {
-        try {
-          const res = await fetch(href);
-          const blob = await res.blob();
+        const res = await fetch(href);
+        const blob = await res.blob();
 
-          const base64 = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(blob);
-          });
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
 
-          // 🔥 set BOTH (important)
-          image.setAttribute("href", base64);
-          image.setAttributeNS(
-            "http://www.w3.org/1999/xlink",
-            "xlink:href",
-            base64,
-          );
-        } catch (err) {
-          console.error("Failed to inline image", err);
-        }
+        image.setAttribute("href", base64);
+        image.setAttributeNS(
+          "http://www.w3.org/1999/xlink",
+          "xlink:href",
+          base64,
+        );
       }
     }
 
-    // ✅ serialize SVG
     const svgData = new XMLSerializer().serializeToString(clonedSvg);
 
-    // ✅ convert ke base64 (lebih stabil dari blob)
-    const svgBase64 = `data:image/svg+xml;base64,${btoa(
-      unescape(encodeURIComponent(svgData)),
-    )}`;
-
     const img = new Image();
-
-    // 🔥 penting untuk CORS
     img.crossOrigin = "anonymous";
 
     img.onload = () => {
+      // 🎯 SET SIZE DI SINI
+      const sizeCm = 15; // ubah sesuai kebutuhan (cm)
+      const dpi = 300;
+
+      const sizePx = Math.round((sizeCm / 2.54) * dpi);
+
       const canvas = document.createElement("canvas");
-
-      const width = svg.clientWidth || 200;
-      const height = svg.clientHeight || 200;
-
-      // optional: biar HD
-      const scale = 4;
-      canvas.width = width * scale;
-      canvas.height = height * scale;
+      canvas.width = sizePx;
+      canvas.height = sizePx;
 
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      ctx.scale(scale, scale);
+      // 🔥 penting untuk QR biar tidak blur
+      ctx.imageSmoothingEnabled = false;
 
-      // sedikit delay biar aman render image di dalam SVG
-      setTimeout(() => {
-        ctx.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img, 0, 0, sizePx, sizePx);
 
-        canvas.toBlob((blob) => {
+      canvas.toBlob(
+        (blob) => {
           if (!blob) return;
 
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
-          link.download = "qr.png";
+          link.download = `qr-${sizeCm}cm-300dpi.png`;
           link.click();
 
           URL.revokeObjectURL(url);
-        }, "image/png");
-      }, 50);
+        },
+        "image/png",
+        1.0,
+      );
     };
 
-    img.onerror = (e) => {
-      console.error("Failed to load SVG into image", e);
-    };
+    img.onerror = (e) => console.error("ERROR", e);
 
-    img.src = svgBase64;
+    img.src = `data:image/svg+xml;base64,${btoa(
+      unescape(encodeURIComponent(svgData)),
+    )}`;
   }
 
   const copyToClipboard = async (slug: string, id: string) => {

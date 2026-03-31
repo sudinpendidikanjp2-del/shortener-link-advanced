@@ -1,48 +1,65 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { useAuth } from '@/components/auth-provider'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { FieldGroup, Field, FieldLabel } from '@/components/ui/field'
-import { AlertCircle, Link2 } from 'lucide-react'
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useAuth } from "@/components/auth-provider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
+import { AlertCircle, Link2 } from "lucide-react";
+import { redirect } from "next/navigation";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function LoginPage() {
-  const { login, user, isLoading: authLoading } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [registrationEnabled, setRegistrationEnabled] = useState(true)
+  const { login, user, isLoading: authLoading } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [registrationEnabled, setRegistrationEnabled] = useState(true);
 
   useEffect(() => {
-    // Check if registration is enabled
-    fetch('/api/auth/registration-status')
-      .then((res) => res.json())
-      .then((data) => setRegistrationEnabled(data.enabled))
-      .catch(() => setRegistrationEnabled(false))
-  }, [])
-
-  useEffect(() => {
-    if (!authLoading && user) {
-      window.location.href = '/dashboard'
+    if (user) {
+      // Check if registration is enabled
+      fetch("/api/auth/registration-status")
+        .then((res) => res.json())
+        .then((data) => setRegistrationEnabled(data.enabled))
+        .catch(() => setRegistrationEnabled(false));
     }
-  }, [user, authLoading])
+  }, []);
+
+  if (authLoading) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (user) {
+    redirect("/dashboard");
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
-    const result = await login(email, password)
+    const result = await login(email, password);
 
     if (result.error) {
-      setError(result.error)
+      setError(result.error);
     }
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -85,14 +102,14 @@ export default function LoginPage() {
               </Field>
             </FieldGroup>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
         </CardContent>
         {registrationEnabled && (
           <CardFooter className="justify-center">
             <p className="text-sm text-muted-foreground">
-              Don&apos;t have an account?{' '}
+              Don&apos;t have an account?{" "}
               <Link href="/register" className="text-primary hover:underline">
                 Sign up
               </Link>
@@ -101,5 +118,5 @@ export default function LoginPage() {
         )}
       </Card>
     </div>
-  )
+  );
 }
